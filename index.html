@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#FFFFFF">
@@ -10,10 +10,10 @@
 <link rel="apple-touch-icon" href="./icon-192.png">
 <title>Daily Health Log</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  body { font-family: 'Helvetica Neue', Arial, 'Noto Sans TC', sans-serif; background: #FFFFFF; color: #1A1A1A; overscroll-behavior: none; }
-  button { font-family: inherit; }
-  ::-webkit-scrollbar { display: none; }
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Helvetica Neue',Arial,'Noto Sans TC',sans-serif;background:#fff;color:#1A1A1A;overscroll-behavior:none;}
+button{font-family:inherit;}
+::-webkit-scrollbar{display:none;}
 </style>
 <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
 <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
@@ -22,108 +22,111 @@
 <body>
 <div id="root"></div>
 <script type="text/babel">
-const { useState, useCallback, useMemo, useEffect } = React;
+const{useState,useCallback,useMemo,useEffect,useRef}=React;
 
-const MONTHS_EN = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-const WKDAYS = ["M","T","W","T","F","S","S"];
-const C = {
-  bg:"#FFFFFF", card:"#F5F5F5", black:"#1A1A1A", gray:"#666666",
-  grayL:"#AAAAAA", grayXL:"#E0E0E0", green:"#43A047", red:"#D64545",
-  accent:"#D64545", blue:"#42A5F5", greenBg:"#E8F5E9", redBg:"#FFEBEE",
-};
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const MONTHS_SHORT=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+const WK=["M","T","W","T","F","S","S"];
+const C={bg:"#FFFFFF",card:"#F5F5F5",black:"#1A1A1A",gray:"#666",grayL:"#AAA",grayXL:"#E0E0E0",
+  green:"#43A047",red:"#D64545",accent:"#D64545",blue:"#42A5F5",greenBg:"#E8F5E9",redBg:"#FFEBEE"};
 
-function getDIM(y,m){return new Date(y,m+1,0).getDate();}
-function getFD(y,m){return(new Date(y,m,1).getDay()+6)%7;}
+const DIM=(y,m)=>new Date(y,m+1,0).getDate();
+const FD=(y,m)=>(new Date(y,m,1).getDay()+6)%7;
 
-// Persist to localStorage
-function loadData(){try{return JSON.parse(localStorage.getItem('dhl-data'))||{};}catch(e){return {};}}
-function saveData(d){try{localStorage.setItem('dhl-data',JSON.stringify(d));}catch(e){}}
+function load(){try{return JSON.parse(localStorage.getItem('dhl-data'))||{};}catch(e){return{};}}
+function save(d){try{localStorage.setItem('dhl-data',JSON.stringify(d));}catch(e){}}
 
 function Bottle({filled,size=36}){
-  return React.createElement('svg',{width:size,height:size,viewBox:"0 0 32 32"},
-    React.createElement('rect',{x:11,y:2,width:10,height:5,rx:2,fill:filled?C.blue:C.grayXL,stroke:C.grayL,strokeWidth:1}),
-    React.createElement('rect',{x:8,y:7,width:16,height:22,rx:4,fill:filled?C.blue:"transparent",stroke:C.grayL,strokeWidth:1.5}),
-    filled&&React.createElement('text',{x:16,y:21,textAnchor:"middle",fontSize:7,fill:"#fff",fontWeight:"bold"},"水")
-  );
+  return <svg width={size} height={size} viewBox="0 0 32 32">
+    <rect x="11" y="2" width="10" height="5" rx="2" fill={filled?C.blue:C.grayXL} stroke={C.grayL} strokeWidth="1"/>
+    <rect x="8" y="7" width="16" height="22" rx="4" fill={filled?C.blue:"transparent"} stroke={C.grayL} strokeWidth="1.5"/>
+    {filled&&<text x="16" y="21" textAnchor="middle" fontSize="7" fill="#fff" fontWeight="bold">水</text>}
+  </svg>;
 }
 
 function CalIcon({size=26,active}){
   const p={stroke:active?C.black:C.grayL,strokeWidth:2,strokeLinecap:"round",fill:"none"};
-  return React.createElement('svg',{width:size,height:size,viewBox:"0 0 24 24"},
-    React.createElement('rect',{x:3,y:4,width:18,height:18,rx:2,...p}),
-    React.createElement('line',{x1:3,y1:10,x2:21,y2:10,...p}),
-    React.createElement('line',{x1:8,y1:2,x2:8,y2:6,...p}),
-    React.createElement('line',{x1:16,y1:2,x2:16,y2:6,...p}),
-  );
+  return <svg width={size} height={size} viewBox="0 0 24 24">
+    <rect x="3" y="4" width="18" height="18" rx="2" {...p}/>
+    <line x1="3" y1="10" x2="21" y2="10" {...p}/>
+    <line x1="8" y1="2" x2="8" y2="6" {...p}/>
+    <line x1="16" y1="2" x2="16" y2="6" {...p}/>
+  </svg>;
 }
 function ChartIcon({size=26,active}){
   const p={stroke:active?C.black:C.grayL,strokeWidth:2,strokeLinecap:"round",fill:"none"};
-  return React.createElement('svg',{width:size,height:size,viewBox:"0 0 24 24"},
-    React.createElement('rect',{x:3,y:3,width:18,height:18,rx:2,...p}),
-    React.createElement('line',{x1:8,y1:16,x2:8,y2:10,...p}),
-    React.createElement('line',{x1:12,y1:16,x2:12,y2:7,...p}),
-    React.createElement('line',{x1:16,y1:16,x2:16,y2:12,...p}),
-  );
+  return <svg width={size} height={size} viewBox="0 0 24 24">
+    <rect x="3" y="3" width="18" height="18" rx="2" {...p}/>
+    <line x1="8" y1="16" x2="8" y2="10" {...p}/>
+    <line x1="12" y1="16" x2="12" y2="7" {...p}/>
+    <line x1="16" y1="16" x2="16" y2="12" {...p}/>
+  </svg>;
 }
 
 function App(){
-  const [data,setDataState] = useState(loadData);
-  const [selMonth,setSelMonth] = useState(null);
-  const [selDay,setSelDay] = useState(null);
-  const [view,setView] = useState("cal");
+  const[data,setDataState]=useState(load);
+  const[month,setMonth]=useState(()=>{const m=new Date().getMonth();return m>=5&&m<=11?m:5;});
+  const[selDay,setSelDay]=useState(null);
+  const[view,setView]=useState("cal");
+  const touchRef=useRef(null);
 
-  const setData = useCallback((fn)=>{
-    setDataState(prev=>{
-      const next = typeof fn==='function'?fn(prev):{...prev,...fn};
-      saveData(next);
-      return next;
-    });
+  const setData=useCallback(fn=>{
+    setDataState(prev=>{const next=typeof fn==='function'?fn(prev):{...prev,...fn};save(next);return next;});
   },[]);
 
-  const today = useMemo(()=>{const d=new Date();return{y:d.getFullYear(),m:d.getMonth(),d:d.getDate()};},[]);
+  const today=useMemo(()=>{const d=new Date();return{y:d.getFullYear(),m:d.getMonth(),d:d.getDate()};},[]);
 
   const dk=(m,d)=>`2026-${m}-${d}`;
   const getD=useCallback((m,d)=>data[dk(m,d)]||{bottles:0,drink:false,dessert:false,vinegar:false,exercise:false},[data]);
-  const setD=useCallback((m,d,nd)=>{
-    const k=dk(m,d);
-    setData(p=>({...p,[k]:{...getD(m,d),...nd}}));
-  },[getD,setData]);
+  const setD=useCallback((m,d,nd)=>{setData(p=>({...p,[dk(m,d)]:{...getD(m,d),...nd}}));},[getD,setData]);
 
-  const getWeekStats=useCallback((m,d)=>{
+  const getWS=useCallback((m,d)=>{
     const dt=new Date(2026,m,d);const dow=dt.getDay();
     const sun=new Date(dt);sun.setDate(dt.getDate()-dow);
-    let drinks=0,desserts=0;
+    let dr=0,de=0;
     for(let i=0;i<7;i++){const c=new Date(sun);c.setDate(sun.getDate()+i);
-      const dd=getD(c.getMonth(),c.getDate());
-      if(dd.drink)drinks++;if(dd.dessert)desserts++;}
-    return{drinks,desserts};
+      const dd=getD(c.getMonth(),c.getDate());if(dd.drink)dr++;if(dd.dessert)de++;}
+    return{drinks:dr,desserts:de};
   },[getD]);
 
-  const getStatus=useCallback((m,d)=>{
+  const getSt=useCallback((m,d)=>{
     const dd=getD(m,d);
     if(dd.bottles===0&&!dd.drink&&!dd.dessert)return"empty";
     const wOk=dd.bottles>=3;const dOk=!dd.dessert||dd.vinegar||dd.exercise;
-    const ws=getWeekStats(m,d);
+    const ws=getWS(m,d);
     if(wOk&&dOk&&(!dd.drink||ws.drinks<=3)&&(!dd.dessert||ws.desserts<=2))return"good";
     return"warn";
-  },[getD,getWeekStats]);
+  },[getD,getWS]);
 
   const isToday=(m,d)=>2026===today.y&&m===today.m&&d===today.d;
 
-  const buildRows=(m)=>{
-    const dim=getDIM(2026,m);const fd=getFD(2026,m);
+  const rows=useMemo(()=>{
+    const dim=DIM(2026,month);const fd=FD(2026,month);
     const r=[];let row=[];
     for(let i=0;i<fd;i++)row.push(null);
     for(let d=1;d<=dim;d++){row.push(d);if(row.length===7){r.push(row);row=[];}}
     if(row.length){while(row.length<7)row.push(null);r.push(row);}
     return r;
+  },[month]);
+
+  const sel=selDay?getD(month,selDay):null;
+  const selW=selDay?getWS(month,selDay):null;
+  const canP=month>5;const canN=month<11;
+
+  const prevM=()=>{if(canP){setMonth(m=>m-1);setSelDay(null);}};
+  const nextM=()=>{if(canN){setMonth(m=>m+1);setSelDay(null);}};
+
+  // Swipe
+  const onTS=e=>{touchRef.current=e.touches[0].clientX;};
+  const onTE=e=>{
+    if(touchRef.current==null)return;
+    const diff=e.changedTouches[0].clientX-touchRef.current;
+    if(Math.abs(diff)>50){if(diff>0)prevM();else nextM();}
+    touchRef.current=null;
   };
 
-  const sel=(selDay&&selMonth!=null)?getD(selMonth,selDay):null;
-  const selW=(selDay&&selMonth!=null)?getWeekStats(selMonth,selDay):null;
-
-  const getMonthStats=(m)=>{
-    const dim=getDIM(2026,m);
+  const getMS=(m)=>{
+    const dim=DIM(2026,m);
     let wP=0,wF=0,drD=0,deD=0,vC=0,eC=0,deNP=0,tB=0,tT=0;
     for(let d=1;d<=dim;d++){const dd=getD(m,d);
       if(dd.bottles>0||dd.drink||dd.dessert){tT++;tB+=dd.bottles;
@@ -132,186 +135,17 @@ function App(){
     return{wP,wF,drD,deD,vC,eC,deNP,tB,tT,dim};
   };
 
-  // Auto-scroll to current month on load
-  useEffect(()=>{
-    const el=document.getElementById('month-'+today.m);
-    if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
-  },[]);
-
-  const renderMonth=(m)=>{
-    const rows=buildRows(m);
-    return (
-      <div key={m} id={'month-'+m} style={{marginBottom:32}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",padding:"0 2px",marginBottom:8}}>
-          <span style={{fontSize:22,fontWeight:900,color:C.black,letterSpacing:-0.5}}>{MONTHS_EN[m]}</span>
-          <span style={{fontSize:13,color:C.grayL,fontWeight:400}}>2026</span>
-        </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:0,marginBottom:2}}>
-          {WKDAYS.map((w,i)=><div key={i} style={{textAlign:"center",fontSize:14,fontWeight:900,color:C.black,padding:"4px 0",letterSpacing:1}}>{w}</div>)}
-        </div>
-        <div style={{display:"flex",flexDirection:"column",gap:0}}>
-          {rows.map((row,ri)=>(
-            <div key={ri} style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:0}}>
-              {row.map((d,ci)=>{
-                if(!d)return <div key={ci} style={{aspectRatio:"1"}}/>;
-                const st=getStatus(m,d);const td=isToday(m,d);
-                const seld=selMonth===m&&selDay===d;
-                const dd=getD(m,d);const hasData=dd.bottles>0||dd.drink||dd.dessert;
-                let bc="transparent",bw=2.5;
-                if(st==="good"){bc=C.green;bw=2.5;}
-                if(st==="warn"){bc=C.red;bw=2.5;}
-                if(seld){bc=C.black;bw=3;}
-                return(
-                  <div key={ci} onClick={()=>{
-                    if(selMonth===m&&selDay===d){setSelDay(null);setSelMonth(null);}
-                    else{setSelMonth(m);setSelDay(d);}
-                  }} style={{
-                    aspectRatio:"1",borderRadius:4,
-                    background:seld?"#F0F0F0":"transparent",
-                    border:bc!=="transparent"?`${bw}px solid ${bc}`:"2.5px solid transparent",
-                    borderLeft:td&&bc==="transparent"?`3px solid ${C.accent}`:undefined,
-                    cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
-                    transition:"all 0.12s",
-                  }}>
-                    <span style={{fontSize:22,fontWeight:900,color:C.black,lineHeight:1,letterSpacing:-0.5}}>{d}</span>
-                    {hasData&&<div style={{display:"flex",gap:2,marginTop:3}}>
-                      {dd.bottles>0&&<span style={{fontSize:8}}>💧</span>}
-                      {dd.drink&&<span style={{fontSize:8}}>🧋</span>}
-                      {dd.dessert&&<span style={{fontSize:8}}>{(dd.vinegar||dd.exercise)?"✅":"🔴"}</span>}
-                    </div>}
-                  </div>
-                );
-              })}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  const renderDetail=()=>{
-    if(!sel||selDay==null||selMonth==null)return null;
-    return(
-      <div style={{background:C.card,borderRadius:8,padding:"18px 16px",margin:"0 0 20px",border:`1px solid ${C.grayXL}`,position:"sticky",top:10,zIndex:10}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-          <span style={{fontSize:16,fontWeight:800,color:C.black}}>{MONTHS_EN[selMonth].slice(0,3)} {selDay}</span>
-          <button onClick={()=>{setSelDay(null);setSelMonth(null);}} style={{background:"none",border:"none",fontSize:18,cursor:"pointer",color:C.grayL,padding:"2px 6px"}}>✕</button>
-        </div>
-
-        <div style={{marginBottom:16}}>
-          <div style={{fontSize:13,fontWeight:700,marginBottom:8,color:C.black}}>💧 喝水（≥ 3 瓶達標）</div>
-          <div style={{display:"flex",alignItems:"center",gap:4}}>
-            {[1,2,3,4].map(i=>(
-              <div key={i} onClick={()=>setD(selMonth,selDay,{bottles:sel.bottles===i?i-1:i})} style={{cursor:"pointer"}}>
-                <Bottle filled={i<=sel.bottles}/>
-              </div>
-            ))}
-            <span style={{marginLeft:8,fontSize:14,fontWeight:800,color:sel.bottles>=3?C.green:sel.bottles>0?C.red:C.grayL}}>
-              {sel.bottles>0?`${sel.bottles*750}ml`:"—"}
-              {sel.bottles>=3?" ✓":sel.bottles>0?" 不足":""}
-            </span>
-          </div>
-        </div>
-
-        <div style={{marginBottom:16}}>
-          <div style={{fontSize:13,fontWeight:700,marginBottom:8,color:C.black}}>🧋 飲料（週限 3 天）</div>
-          <div style={{display:"flex",gap:8}}>
-            {[false,true].map(v=>(
-              <button key={String(v)} onClick={()=>setD(selMonth,selDay,{drink:v})} style={{
-                background:sel.drink===v?(v?C.gray:C.green):"transparent",
-                color:sel.drink===v?"#fff":C.black,
-                border:`1.5px solid ${sel.drink===v?(v?C.gray:C.green):C.grayXL}`,
-                borderRadius:4,padding:"8px 22px",fontSize:13,fontWeight:700,cursor:"pointer",
-              }}>{v?"有喝":"沒喝"}</button>
-            ))}
-          </div>
-        </div>
-
-        <div style={{marginBottom:sel.dessert?8:0}}>
-          <div style={{fontSize:13,fontWeight:700,marginBottom:8,color:C.black}}>🍰 甜點（週限 2 天）</div>
-          <div style={{display:"flex",gap:8}}>
-            {[false,true].map(v=>(
-              <button key={String(v)} onClick={()=>setD(selMonth,selDay,{dessert:v,...(!v?{vinegar:false,exercise:false}:{})})} style={{
-                background:sel.dessert===v?(v?C.gray:C.green):"transparent",
-                color:sel.dessert===v?"#fff":C.black,
-                border:`1.5px solid ${sel.dessert===v?(v?C.gray:C.green):C.grayXL}`,
-                borderRadius:4,padding:"8px 22px",fontSize:13,fontWeight:700,cursor:"pointer",
-              }}>{v?"有吃":"沒吃"}</button>
-            ))}
-          </div>
-        </div>
-
-        {sel.dessert&&(
-          <div style={{background:C.bg,borderRadius:6,padding:"12px 14px",marginTop:10,border:`1.5px solid ${C.grayXL}`}}>
-            <div style={{fontSize:12,color:C.gray,marginBottom:10,fontWeight:600}}>甜點防護（任一 ✓ 即可）</div>
-            {[{key:"vinegar",icon:"🍶",label:"吃前喝醋"},{key:"exercise",icon:"🏃",label:"吃後運動"}].map(item=>(
-              <div key={item.key} onClick={()=>setD(selMonth,selDay,{[item.key]:!sel[item.key]})}
-                style={{display:"flex",alignItems:"center",gap:10,cursor:"pointer",marginBottom:8,padding:"4px 0"}}>
-                <div style={{width:26,height:26,borderRadius:4,
-                  background:sel[item.key]?C.green:"transparent",
-                  border:`2px solid ${sel[item.key]?C.green:C.grayXL}`,
-                  display:"flex",alignItems:"center",justifyContent:"center",
-                  color:"#fff",fontSize:15,fontWeight:900}}>{sel[item.key]?"✓":""}</div>
-                <span style={{fontSize:13,fontWeight:600,color:C.black}}>{item.icon} {item.label}</span>
-              </div>
-            ))}
-            <div style={{marginTop:6,fontSize:12,fontWeight:700,textAlign:"center",
-              color:(sel.vinegar||sel.exercise)?C.green:C.red,
-              background:(sel.vinegar||sel.exercise)?C.greenBg:C.redBg,
-              borderRadius:4,padding:"6px 0"}}>
-              {(sel.vinegar||sel.exercise)?"✓ 甜點防護達成":"⚠ 未達成甜點防護"}
-            </div>
-          </div>
-        )}
-
-        {selW&&(
-          <div style={{display:"flex",justifyContent:"space-around",marginTop:14,padding:"10px 0",borderTop:`1px solid ${C.grayXL}`,fontSize:12,color:C.gray}}>
-            <span>本週飲料 <b style={{color:selW.drinks>3?C.red:C.green}}>{selW.drinks}/3</b></span>
-            <span>本週甜點 <b style={{color:selW.desserts>2?C.red:C.green}}>{selW.desserts}/2</b></span>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderReview=()=>(
-    <div>
-      {[5,6,7,8,9,10,11].map(m=>{
-        const s=getMonthStats(m);const wRate=s.tT>0?Math.round(s.wP/s.tT*100):0;
-        return(
-          <div key={m} style={{background:C.card,borderRadius:8,padding:16,marginBottom:14,border:`1px solid ${C.grayXL}`}}>
-            <div style={{fontSize:16,fontWeight:900,marginBottom:12,color:C.black}}>{MONTHS_EN[m]}</div>
-            {s.tT===0?<div style={{color:C.grayL,fontSize:13,padding:"10px 0"}}>尚無紀錄</div>:(
-              <>
-                <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:12}}>
-                  <div style={{width:50,height:50,borderRadius:"50%",border:`3px solid ${wRate>=70?C.green:C.red}`,
-                    display:"flex",alignItems:"center",justifyContent:"center",
-                    fontSize:16,fontWeight:900,color:wRate>=70?C.green:C.red,flexShrink:0}}>{wRate}%</div>
-                  <div style={{fontSize:12,lineHeight:2,color:C.black}}>
-                    <div>💧 達標 <b>{s.wP}</b> · 未達 <b style={{color:C.red}}>{s.wF}</b></div>
-                    <div>🧋 飲料 <b>{s.drD}</b> 天 · 🍰 甜點 <b>{s.deD}</b> 天</div>
-                    {s.deD>0&&<div>⚠ 無防護 <b style={{color:s.deNP>0?C.red:C.green}}>{s.deNP}</b> 次</div>}
-                  </div>
-                </div>
-                <div style={{background:C.grayXL,borderRadius:4,height:6,overflow:"hidden"}}>
-                  <div style={{width:`${wRate}%`,height:"100%",background:wRate>=70?C.green:C.red,borderRadius:4}}/>
-                </div>
-                <div style={{textAlign:"right",fontSize:11,color:C.grayL,marginTop:4}}>已記錄 {s.tT}/{s.dim} 天</div>
-              </>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-
   return(
-    <div style={{background:C.bg,minHeight:"100vh",fontFamily:"'Helvetica Neue',Arial,'Noto Sans TC',sans-serif",
-      color:C.black,maxWidth:430,margin:"0 auto",padding:"10px 12px 40px"}}>
+    <div style={{background:C.bg,minHeight:"100vh",maxWidth:430,margin:"0 auto",padding:"10px 12px 40px"}}
+      onTouchStart={onTS} onTouchEnd={onTE}>
+
+      {/* Header */}
       <div style={{textAlign:"center",padding:"14px 0 6px"}}>
         <div style={{fontSize:16,fontWeight:400,letterSpacing:4,color:C.black}}>DAILY HEALTH LOG</div>
       </div>
-      <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:24,margin:"10px 0 20px"}}>
+
+      {/* View toggle icons */}
+      <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:24,margin:"10px 0 16px"}}>
         <button onClick={()=>setView("cal")} style={{background:"none",border:"none",cursor:"pointer",padding:6,
           transform:view==="cal"?"scale(1.35)":"scale(1)",transition:"transform 0.2s",opacity:view==="cal"?1:0.4}}>
           <CalIcon size={26} active={view==="cal"}/>
@@ -325,9 +159,68 @@ function App(){
 
       {view==="cal"?(
         <>
-          {renderDetail()}
-          {[5,6,7,8,9,10,11].map(m=>renderMonth(m))}
-          <div style={{display:"flex",justifyContent:"center",gap:16,marginTop:8,fontSize:11,color:C.grayL}}>
+          {/* Month nav */}
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 4px",marginBottom:12}}>
+            <button onClick={prevM} style={{background:"none",border:"none",fontSize:28,cursor:canP?"pointer":"default",
+              color:canP?C.black:C.grayXL,padding:"4px 12px",fontWeight:300}}>‹</button>
+            <div style={{textAlign:"center"}}>
+              <div style={{fontSize:24,fontWeight:900,letterSpacing:-0.5}}>{MONTHS[month]}</div>
+              <div style={{fontSize:12,color:C.grayL,marginTop:2}}>2026</div>
+            </div>
+            <button onClick={nextM} style={{background:"none",border:"none",fontSize:28,cursor:canN?"pointer":"default",
+              color:canN?C.black:C.grayXL,padding:"4px 12px",fontWeight:300}}>›</button>
+          </div>
+
+          {/* Month dots */}
+          <div style={{display:"flex",justifyContent:"center",gap:6,marginBottom:16}}>
+            {[5,6,7,8,9,10,11].map(m=>(
+              <button key={m} onClick={()=>{setMonth(m);setSelDay(null);}} style={{
+                width:month===m?24:8,height:8,borderRadius:4,border:"none",cursor:"pointer",
+                background:month===m?C.black:C.grayXL,transition:"all 0.2s",
+              }}/>
+            ))}
+          </div>
+
+          {/* Weekday headers */}
+          <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:0,marginBottom:2}}>
+            {WK.map((w,i)=><div key={i} style={{textAlign:"center",fontSize:14,fontWeight:900,color:C.black,padding:"4px 0",letterSpacing:1}}>{w}</div>)}
+          </div>
+
+          {/* Day grid */}
+          <div style={{display:"flex",flexDirection:"column",gap:0}}>
+            {rows.map((row,ri)=>(
+              <div key={ri} style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:0}}>
+                {row.map((d,ci)=>{
+                  if(!d)return<div key={ci} style={{aspectRatio:"1"}}/>;
+                  const st=getSt(month,d);const td=isToday(month,d);const seld=selDay===d;
+                  const dd=getD(month,d);const has=dd.bottles>0||dd.drink||dd.dessert;
+                  let bc="transparent",bw=2.5;
+                  if(st==="good"){bc=C.green;}
+                  if(st==="warn"){bc=C.red;}
+                  if(seld){bc=C.black;bw=3;}
+                  return(
+                    <div key={ci} onClick={()=>setSelDay(selDay===d?null:d)} style={{
+                      aspectRatio:"1",borderRadius:4,background:seld?"#F0F0F0":"transparent",
+                      border:bc!=="transparent"?`${bw}px solid ${bc}`:"2.5px solid transparent",
+                      borderLeft:td&&bc==="transparent"?`3px solid ${C.accent}`:undefined,
+                      cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+                      transition:"all 0.12s",
+                    }}>
+                      <span style={{fontSize:22,fontWeight:900,color:C.black,lineHeight:1,letterSpacing:-0.5}}>{d}</span>
+                      {has&&<div style={{display:"flex",gap:2,marginTop:3}}>
+                        {dd.bottles>0&&<span style={{fontSize:8}}>💧</span>}
+                        {dd.drink&&<span style={{fontSize:8}}>🧋</span>}
+                        {dd.dessert&&<span style={{fontSize:8}}>{(dd.vinegar||dd.exercise)?"✅":"🔴"}</span>}
+                      </div>}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+
+          {/* Legend */}
+          <div style={{display:"flex",justifyContent:"center",gap:16,marginTop:12,fontSize:11,color:C.grayL}}>
             {[{c:C.green,l:"達標"},{c:C.red,l:"警示"},{c:C.grayXL,l:"未記錄"}].map(x=>(
               <span key={x.l} style={{display:"flex",alignItems:"center",gap:4}}>
                 <span style={{width:8,height:8,borderRadius:2,border:`2px solid ${x.c}`,display:"inline-block"}}/>
@@ -335,16 +228,154 @@ function App(){
               </span>
             ))}
           </div>
+
+          {/* Detail panel */}
+          {sel&&selDay&&(
+            <div style={{background:C.card,borderRadius:8,padding:"18px 16px",marginTop:16,border:`1px solid ${C.grayXL}`}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+                <span style={{fontSize:16,fontWeight:800}}>{MONTHS[month].slice(0,3)} {selDay}</span>
+                <button onClick={()=>setSelDay(null)} style={{background:"none",border:"none",fontSize:18,cursor:"pointer",color:C.grayL,padding:"2px 6px"}}>✕</button>
+              </div>
+
+              <div style={{marginBottom:16}}>
+                <div style={{fontSize:13,fontWeight:700,marginBottom:8}}>💧 喝水（≥ 3 瓶達標）</div>
+                <div style={{display:"flex",alignItems:"center",gap:4}}>
+                  {[1,2,3,4].map(i=>(
+                    <div key={i} onClick={()=>setD(month,selDay,{bottles:sel.bottles===i?i-1:i})} style={{cursor:"pointer"}}>
+                      <Bottle filled={i<=sel.bottles}/>
+                    </div>
+                  ))}
+                  <span style={{marginLeft:8,fontSize:14,fontWeight:800,
+                    color:sel.bottles>=3?C.green:sel.bottles>0?C.red:C.grayL}}>
+                    {sel.bottles>0?`${sel.bottles*750}ml`:"—"}
+                    {sel.bottles>=3?" ✓":sel.bottles>0?" 不足":""}
+                  </span>
+                </div>
+              </div>
+
+              <div style={{marginBottom:16}}>
+                <div style={{fontSize:13,fontWeight:700,marginBottom:8}}>🧋 飲料（週限 3 天）</div>
+                <div style={{display:"flex",gap:8}}>
+                  {[false,true].map(v=>(
+                    <button key={String(v)} onClick={()=>setD(month,selDay,{drink:v})} style={{
+                      background:sel.drink===v?(v?C.gray:C.green):"transparent",
+                      color:sel.drink===v?"#fff":C.black,
+                      border:`1.5px solid ${sel.drink===v?(v?C.gray:C.green):C.grayXL}`,
+                      borderRadius:4,padding:"8px 22px",fontSize:13,fontWeight:700,cursor:"pointer",
+                    }}>{v?"有喝":"沒喝"}</button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{marginBottom:sel.dessert?8:0}}>
+                <div style={{fontSize:13,fontWeight:700,marginBottom:8}}>🍰 甜點（週限 2 天）</div>
+                <div style={{display:"flex",gap:8}}>
+                  {[false,true].map(v=>(
+                    <button key={String(v)} onClick={()=>setD(month,selDay,{dessert:v,...(!v?{vinegar:false,exercise:false}:{})})} style={{
+                      background:sel.dessert===v?(v?C.gray:C.green):"transparent",
+                      color:sel.dessert===v?"#fff":C.black,
+                      border:`1.5px solid ${sel.dessert===v?(v?C.gray:C.green):C.grayXL}`,
+                      borderRadius:4,padding:"8px 22px",fontSize:13,fontWeight:700,cursor:"pointer",
+                    }}>{v?"有吃":"沒吃"}</button>
+                  ))}
+                </div>
+              </div>
+
+              {sel.dessert&&(
+                <div style={{background:C.bg,borderRadius:6,padding:"12px 14px",marginTop:10,border:`1.5px solid ${C.grayXL}`}}>
+                  <div style={{fontSize:12,color:C.gray,marginBottom:10,fontWeight:600}}>甜點防護（任一 ✓ 即可）</div>
+                  {[{key:"vinegar",icon:"🍶",label:"吃前喝醋"},{key:"exercise",icon:"🏃",label:"吃後運動"}].map(item=>(
+                    <div key={item.key} onClick={()=>setD(month,selDay,{[item.key]:!sel[item.key]})}
+                      style={{display:"flex",alignItems:"center",gap:10,cursor:"pointer",marginBottom:8,padding:"4px 0"}}>
+                      <div style={{width:26,height:26,borderRadius:4,
+                        background:sel[item.key]?C.green:"transparent",
+                        border:`2px solid ${sel[item.key]?C.green:C.grayXL}`,
+                        display:"flex",alignItems:"center",justifyContent:"center",
+                        color:"#fff",fontSize:15,fontWeight:900}}>{sel[item.key]?"✓":""}</div>
+                      <span style={{fontSize:13,fontWeight:600}}>{item.icon} {item.label}</span>
+                    </div>
+                  ))}
+                  <div style={{marginTop:6,fontSize:12,fontWeight:700,textAlign:"center",
+                    color:(sel.vinegar||sel.exercise)?C.green:C.red,
+                    background:(sel.vinegar||sel.exercise)?C.greenBg:C.redBg,
+                    borderRadius:4,padding:"6px 0"}}>
+                    {(sel.vinegar||sel.exercise)?"✓ 甜點防護達成":"⚠ 未達成甜點防護"}
+                  </div>
+                </div>
+              )}
+
+              {selW&&(
+                <div style={{display:"flex",justifyContent:"space-around",marginTop:14,padding:"10px 0",borderTop:`1px solid ${C.grayXL}`,fontSize:12,color:C.gray}}>
+                  <span>本週飲料 <b style={{color:selW.drinks>3?C.red:C.green}}>{selW.drinks}/3</b></span>
+                  <span>本週甜點 <b style={{color:selW.desserts>2?C.red:C.green}}>{selW.desserts}/2</b></span>
+                </div>
+              )}
+            </div>
+          )}
         </>
-      ):renderReview()}
+      ):(
+        /* Review */
+        <div>
+          {/* Month selector */}
+          <div style={{display:"flex",justifyContent:"center",gap:4,marginBottom:16,flexWrap:"wrap"}}>
+            {[5,6,7,8,9,10,11].map(m=>(
+              <button key={m} onClick={()=>setMonth(m)} style={{
+                background:month===m?C.black:"transparent",color:month===m?"#fff":C.grayL,
+                border:"none",borderRadius:4,padding:"4px 8px",fontSize:11,fontWeight:700,cursor:"pointer",letterSpacing:1,
+              }}>{MONTHS_SHORT[m]}</button>
+            ))}
+          </div>
+
+          {(()=>{
+            const s=getMS(month);const wRate=s.tT>0?Math.round(s.wP/s.tT*100):0;
+            return(
+              <div style={{background:C.card,borderRadius:8,padding:16,border:`1px solid ${C.grayXL}`}}>
+                <div style={{fontSize:18,fontWeight:900,marginBottom:16}}>{MONTHS[month]}</div>
+                {s.tT===0?<div style={{color:C.grayL,fontSize:13,padding:"20px 0",textAlign:"center"}}>尚無紀錄</div>:(
+                  <>
+                    <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:16}}>
+                      <div style={{width:56,height:56,borderRadius:"50%",border:`3px solid ${wRate>=70?C.green:C.red}`,
+                        display:"flex",alignItems:"center",justifyContent:"center",
+                        fontSize:18,fontWeight:900,color:wRate>=70?C.green:C.red,flexShrink:0}}>{wRate}%</div>
+                      <div style={{fontSize:12,lineHeight:2}}>
+                        <div>💧 達標 <b>{s.wP}</b> · 未達 <b style={{color:C.red}}>{s.wF}</b></div>
+                        <div>📊 平均 <b>{(s.tB/s.tT).toFixed(1)}</b> 瓶/天</div>
+                      </div>
+                    </div>
+                    <div style={{background:C.grayXL,borderRadius:4,height:6,overflow:"hidden",marginBottom:16}}>
+                      <div style={{width:`${wRate}%`,height:"100%",background:wRate>=70?C.green:C.red,borderRadius:4}}/>
+                    </div>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:14}}>
+                      <div style={{background:C.bg,borderRadius:6,padding:14,textAlign:"center",border:`1px solid ${C.grayXL}`}}>
+                        <div style={{fontSize:11,color:C.grayL}}>🧋 飲料天數</div>
+                        <div style={{fontSize:24,fontWeight:900,marginTop:4}}>{s.drD}</div>
+                      </div>
+                      <div style={{background:C.bg,borderRadius:6,padding:14,textAlign:"center",border:`1px solid ${C.grayXL}`}}>
+                        <div style={{fontSize:11,color:C.grayL}}>🍰 甜點天數</div>
+                        <div style={{fontSize:24,fontWeight:900,marginTop:4}}>{s.deD}</div>
+                      </div>
+                    </div>
+                    {s.deD>0&&(
+                      <div style={{fontSize:12,lineHeight:2,padding:"4px 0"}}>
+                        <div>🍶 有喝醋 <b style={{color:C.green}}>{s.vC}</b> · 🏃 有運動 <b style={{color:C.green}}>{s.eC}</b></div>
+                        <div>⚠ 無防護 <b style={{color:s.deNP>0?C.red:C.green}}>{s.deNP}</b> 次</div>
+                      </div>
+                    )}
+                    <div style={{textAlign:"right",fontSize:11,color:C.grayL,marginTop:8}}>已記錄 {s.tT}/{s.dim} 天</div>
+                  </>
+                )}
+              </div>
+            );
+          })()}
+        </div>
+      )}
 
       <div style={{textAlign:"center",marginTop:24,fontSize:10,color:C.grayL,letterSpacing:2}}>2026 · DAILY HEALTH LOG</div>
     </div>
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
-
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js');}
 </script>
 </body>
